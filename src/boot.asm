@@ -49,7 +49,7 @@
 start:
 	cli
 
-	mov ax, 0x0
+	xor ax, ax
 	mov ds, ax
 	mov es, ax
 
@@ -149,7 +149,7 @@ search_for_file:
 	loop search_for_file
 	
 ; If the file wasn't found
-	jmp print_err
+	jmp $
 
 file_found:
 	sub di, 11
@@ -240,12 +240,6 @@ read_sector:
 	int 13h
 
 	ret
-
-print_err:
-	mov ax, 0x0E45
-	xor bx, bx
-	int 0x10
-	jmp $
 
 wait_a20:
 .main:
