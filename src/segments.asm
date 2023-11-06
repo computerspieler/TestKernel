@@ -1,12 +1,15 @@
 %define GDT(base,limit,flags,access) \
-    ((limit) & 0xFF), (((limit) >> 8) & 0xFF), ((base) & 0xFF), \
-    (((base) >> 8) & 0xFF), (((base) >> 16) & 0xFF), access, \
-    (flags << 3) | (((limit) >> 16) & 0xF), (((base) >> 24) & 0xFF)
+    ((limit) & 0xFF), (((limit) >> 8) & 0xFF), \
+	((base) & 0xFF), (((base) >> 8) & 0xFF), (((base) >> 16) & 0xFF), \
+	access, (flags << 4) | (((limit) >> 16) & 0xF), \
+	(((base) >> 24) & 0xFF)
 
 %define IDT(segment_selector,offset,flags) \
     ((offset) & 0xFF), (((offset) >> 8) & 0xFF), ((segment_selector) & 0xFF), \
     (((segment_selector) >> 8) & 0xFF), 0, flags, \
     (((offset) >> 16) & 0xFF), (((offset) >> 24) & 0xFF)
+
+%define IO_MAP_SIZE		(256/8)
 
 struc Task_State_Segment
 	.link:		resw 1
@@ -53,5 +56,7 @@ struc Task_State_Segment
 				resw 1
 	.iopb:		resw 1
 	.ssp:		resd 1
+
+	.io_map:	resb IO_MAP_SIZE
 endstruc
 

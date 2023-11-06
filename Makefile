@@ -1,36 +1,40 @@
-.PHONY: all clean mrproper run
-
-
-floppy.img: boot kernel
-	cat boot /dev/zero | dd of=floppy.img bs=512 count=2880
-	mkdir -p mnt
-	sudo mount floppy.img mnt/
-	sudo cp -fv kernel mnt/KERNEL.BIN
-	sync
-	sudo umount mnt
+.PHONY: all clean mrproper run build image
 	
-run: floppy.img
+all: build
+
+image: floppy.img
+build: bin bin/boot bin/kernel
+
+run: image
 	bochs -f bochs.bxrc -q
 
-all: floppy.img 
-
 clean:
-	rm -rf boot kernel kernel.bin prekernel.bin mnt
+	rm -rf bin mnt
 
 mrproper: clean
 	rm -rf floppy.img
 
 
-boot: src/boot.asm
+floppy.img: build
+	cat bin/boot /dev/zero | dd of=floppy.img bs=512 count=2880
+	mkdir -p mnt
+	sudo mount floppy.img mnt/
+	sudo cp -fv bin/kernel mnt/KERNEL.BIN
+	sync
+	sudo umount mnt
+
+bin:
+	mkdir -p bin
+
+bin/boot: src/boot.asm
 	nasm -f bin -O0 -o $@ $^
 
-kernel.bin: src/kernel.asm src/interrupts.asm src/page.asm	\
-	src/segments.asm src/task.asm
-	(cd src; nasm -f bin -O0 -o ../$@ kernel.asm)
+bin/kernel.bin: $(wildcard src/*.asm)
+	(cd src; nasm -f bin -O0 -l ../bin/kernel.lst -o ../$@ kernel.asm)
 
-prekernel.bin: src/prekernel.asm
+bin/prekernel.bin: src/prekernel.asm
 	nasm -f bin -O0 -o $@ src/prekernel.asm
 
-kernel: prekernel.bin kernel.bin
-	cat prekernel.bin kernel.bin > $@
+bin/kernel: bin/prekernel.bin bin/kernel.bin
+	cat bin/prekernel.bin bin/kernel.bin > $@
 

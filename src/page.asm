@@ -57,4 +57,4 @@ extended_memory_page_count:		dw 0
 pages:
     resb max_page_count
 
-
+[section .text]

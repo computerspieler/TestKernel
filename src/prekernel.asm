@@ -1,5 +1,6 @@
 ; This file's purpose is just to prepare for pagination
 %define BASE_ADDRESS 0x1000
+[cpu 386]
 [org BASE_ADDRESS]
 [bits 32]
 
@@ -14,15 +15,17 @@
 
     jmp (higher_kernel + 0xFFC00000)
 
-    times 4096-($ - $$) db 0
+    times (4096 - ($ - $$)) db 0
+
 page_directory:
     dd (ADDR_TO_SCALAR(page_table) | 3)
     times 1022 dd 2
     dd (ADDR_TO_SCALAR(page_table) | 3)
 
+    ; Not necessary since the page directory is aligned and 4k long
+    ; But it doesn't cost much to add it
+    times (2*4096 - ($ - $$)) db 0
 
-    align 4096  ; Not necessary since the page directory is aligned and 4k long
-                ; But it doesn't cost much to add it
 page_table:
 %assign i 0
 %rep 1024

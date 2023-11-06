@@ -1,5 +1,6 @@
-[BITS 16]
-[ORG 0x7c00]
+[cpu 386]
+[org 0x7c00]
+[bits 16]
 
 %define buffer 0x7E00
 %define output_buffer 0x1000
