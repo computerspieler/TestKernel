@@ -1,4 +1,5 @@
 ; This file's purpose is just to prepare for pagination
+; NOTE: Do not change it, except if you're working with process.asm
 %define BASE_ADDRESS 0x1000
 [cpu 386]
 [org BASE_ADDRESS]
@@ -6,6 +7,8 @@
 
 %define ADDR_TO_SCALAR(addr) (((addr) - $$) + BASE_ADDRESS)
 
+	cli
+    
     mov eax, page_directory     ; Load the page directory
     mov cr3, eax
 
@@ -29,7 +32,11 @@ page_directory:
 page_table:
 %assign i 0
 %rep 1024
+%if i <= 256
     dd (%[i] * 0x1000) | 3
+%else
+    dd 0
+%endif
 %assign i (i+1)
 %endrep
     

@@ -7,35 +7,39 @@
 [section .text]
 	jmp start
 
+%include "macros.asm"
 %include "segments.asm"
 %include "page.asm"
 %include "interrupts.asm"
-%include "task.asm"
+%include "process.asm"
+
+%include "sample_program.asm"
 
 [section .text]
 start:
 	shr ax, 2
-	mov [extended_memory_page_count], ax
+	and eax, 0xFFFF
+	mov [extended_memory_page_count], eax
 	mov esp, STACK_START
 
-    ; Copy the basic gdt to the real gdt
-    mov cx, (gdt_base.end - gdt_base) / 4
-    mov esi, gdt_base
-    mov edi, gdt
-    rep movsd
+	MEMCPY gdt, gdt_base, gdt_base.end - gdt_base
 
     lgdt [gdt_ptr]
     lidt [idt_ptr]
 
 	call paging_init
-    call pic_init
-    call pit_init
+	call process_init
 
-	call process_manager_init
+	mov ebx, sample_program.code_page_address
+	mov edx, [sample_program.code_page_count]
+	mov ecx, [sample_program.stack_page_count]
+	call process_create
 
 	mov esi, test
 	call print_string
 
+    call pic_init
+    call pit_init
 	sti
 
 loop:

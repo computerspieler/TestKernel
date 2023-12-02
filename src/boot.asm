@@ -2,6 +2,11 @@
 [org 0x7c00]
 [bits 16]
 
+%include "macros.asm"
+
+%define KERNEL_CODE_SEGMENT 0x8
+%define KERNEL_DATA_SEGMENT 0x10
+
 %define buffer 0x7E00
 %define output_buffer 0x1000
 
@@ -18,8 +23,6 @@
 %define sector_per_cylinder 18
 %define head_count 2
 %define hidden_sector_count 0
-
-%define BREAK  xchg bx, bx
 
 %define first_data_sector (reserved_sector_count + FAT_copies_count * sector_per_FAT + (directory_entry_size * root_directory_entries_count) / bytes_per_sector)
 
@@ -262,11 +265,11 @@ move_to_protected_mode:
 	or eax, 1
 	mov cr0, eax
 
-	jmp 0x8:.next
+	jmp KERNEL_CODE_SEGMENT:.next
 
 [bits 32]
 .next:
-	mov ax, 0x10
+	mov ax, KERNEL_DATA_SEGMENT
 	mov ds, ax
 	mov es, ax
 	mov fs, ax

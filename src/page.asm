@@ -5,53 +5,112 @@ paging_init:
 	ret
 
 ; Input:
-;	AX = the number of pages to retrieve
+;	EAX = the number of pages to retrieve
 ; Output:
-;   ECX = The address
-paging_retrieve_page:
-	xor dx, dx
-	mov cx, [extended_memory_page_count]
+;   ECX = The first page's id
+paging_retrieve_pages:
+BREAK
+	push ebx
+	push edx
+	xor edx, edx
+	mov ecx, [extended_memory_page_count]
 
 .loop:
     ; Prepare the mask
 	push ecx
-	mov bx, 3
+	dec ecx
     and cl, 3
     shl cl, 1
-	shl bx, cl  ; bx = 0b11 << ((selected page % 4) * 2)
+	mov bl, 3
+	shl bl, cl  ; bl = 0b11 << ((selected page % 4) * 2)
 	pop ecx
 
     ; Apply the mask and check if the current page is free
 	push ecx
-	shl ecx, 2
-	add ecx, pages
-	mov cl, [ecx]
+	dec ecx
+	shr ecx, 2
+	mov cl, [ecx+pages]
 	and bl, cl
 	pop ecx
 	jnz .reset_count
-	inc dx
-	cmp dx, ax
+	inc edx
+	cmp edx, eax
 	je .found
 	loop .loop
 
 .not_found:
-    xor ecx, ecx
+    mov ecx, -1
+	pop edx
+	pop ebx
     ret
 
 .reset_count:
-	xor dx, dx
+	xor edx, edx
 	loop .loop
 
 .found:
-    xor edx, edx
-    mov dx, ax
-    sub ecx, edx
-    shl ecx, 12 ; <=> ecx *= 4096 = 2^12
-    add ecx, emm_start
-    
+	dec ecx
+	pop edx
+	pop ebx
 	ret
 
-extended_memory_page_count:		dw 0
+; Input:
+;	EAX = the number of pages to retrieve
+; Output:
+;   ECX = The page's address
+paging_allocate_pages:
+	push edx
+	push ebx
+
+	call paging_retrieve_pages
+	cmp ecx, -1
+	je .done
+
+; Mark the pages as allocated
+	xchg eax, ecx
+.mark_page:
+	push ecx
+	cmp ecx, 1
+	je .last_page_to_mark
+	mov bl, 2
+	jmp .next
+.last_page_to_mark:
+	mov bl, 3
+.next:
+	add ecx, eax
+	dec ecx
+    and cl, 3
+    shl cl, 1
+	shl bl, cl  ; bl = 0b11 << ((selected page % 4) * 2)
+	pop ecx
+
+	push ecx
+	add ecx, eax
+	dec ecx
+	shr ecx, 2
+	mov dl, [ecx+pages]
+	or dl, bl
+	mov [ecx+pages], dl
+	pop ecx
+
+	loop .mark_page
+
+	mov ecx, eax
+    shl ecx, 12 ; ecx *= 4096 = 2^12
+    add ecx, emm_start
+.done:
+	pop ebx
+	pop edx
+	ret
+
+; Input:
+;	EAX = First page address
+; Output:
+;   None
+paging_free_pages:
+	ret
+
+extended_memory_page_count:		dd 0
 
 [section .bss]
 pages:

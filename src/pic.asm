@@ -1,5 +1,6 @@
 ; This part is stolen from wiki.osdev.org
 ; https://wiki.osdev.org/8259_PIC
+%include "macros.asm"
 
 %define PIC1_VECTOR_OFFSET  0x20
 %define PIC2_VECTOR_OFFSET  0x28
@@ -22,11 +23,6 @@
 %define ICW4_BUF_SLAVE	0x08
 %define ICW4_BUF_MASTER	0x0C
 %define ICW4_SFNM	    0x10
-
-%macro OUT_BYTE 2 
-    mov al, %2
-    out %1, al
-%endmacro
 
 %define IO_WAIT     OUT_BYTE 0x80, 0
 

@@ -27,7 +27,7 @@ bin:
 	mkdir -p bin
 
 bin/boot: src/boot.asm
-	nasm -f bin -O0 -o $@ $^
+	(cd src; nasm -f bin -O0 -o ../bin/boot boot.asm)
 
 bin/kernel.bin: $(wildcard src/*.asm)
 	(cd src; nasm -f bin -O0 -l ../bin/kernel.lst -o ../$@ kernel.asm)
